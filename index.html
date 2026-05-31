@@ -17,15 +17,28 @@
         background-repeat: no-repeat;    /* 防止图片平铺重复 */
         background-attachment: fixed;    /* 背景固定，滚动页面时背景不动 */
     }
+    /* 创建一个半透明的白色卡片容器 */
+    .content-box {
+        background-color: rgba(255, 255, 255, 0.7); /* 0.7代表70%的不透明度，可以根据喜好调整 */
+        padding: 20px;
+        border-radius: 15px; /* 让边角变圆润 */
+        display: inline-block; /* 让盒子宽度适应内容 */
+        margin-top: 20px;
+    }
+
     h1 {
         color: #333;
+        margin: 0; /* 清除默认间距 */
     }
 </style>
 </head>
 <body>
 
-    <h1>Index</h1>
-    <p>GBase_study</p>
+    <!-- 用 class="content-box" 的盒子包住你的文字 -->
+    <div class="content-box">
+        <h1>Index</h1>
+        <p>GBase_study</p>
+    </div>
 <script>
   window.gptbaseConfig = {
     chatbotId: '462e07e3-2eb4-4d32-81d0-6e616b272704',
