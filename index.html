@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GBase网页嵌入</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
         canvas { display: block; }
         
         .content-box {
@@ -14,13 +14,29 @@
             background: rgba(255, 255, 255, 0.7);
             padding: 20px;
             border-radius: 15px;
-            z-index: 10; /* 确保盒子在canvas之上 */
+            z-index: 10;
         }
-        h1 { margin: 0; color: #333; }
-        p { margin: 5px 0 0 0; color: #555; }
+
+        /* 音乐按钮样式：固定在右上角 */
+        #music-btn {
+            position: absolute;
+            top: 20px; right: 20px;
+            z-index: 20;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
+
+    <input type="file" id="music-upload" accept="audio/*" style="display:none">
+    
+    <button id="music-btn">🎵 开启音乐</button>
 
     <canvas id="canvas"></canvas>
 
@@ -30,6 +46,7 @@
     </div>
 
     <script>
+        // --- Canvas 逻辑 ---
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
@@ -45,10 +62,8 @@
         function drawBackground() {
             const canvasAspect = canvas.width / canvas.height;
             const imgAspect = img.width / img.height;
-            
             let drawWidth, drawHeight, offsetX, offsetY;
 
-            // 计算等比例缩放 (Cover 逻辑)
             if (canvasAspect > imgAspect) {
                 drawWidth = canvas.width;
                 drawHeight = canvas.width / imgAspect;
@@ -65,12 +80,7 @@
 
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            if (img.complete) {
-                drawBackground();
-            }
-
-            // 绘制粒子
+            if (img.complete) drawBackground();
             ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
             particles.forEach(p => {
                 p.x += p.vx; p.y += p.vy;
@@ -83,14 +93,44 @@
             requestAnimationFrame(animate);
         }
 
-        function resize() {
+        window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
+        });
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        img.onload = animate;
 
-        img.onload = animate; // 等图片加载好后再开始
+        // --- 音乐播放逻辑 ---
+        const audio = new Audio();
+        const musicBtn = document.getElementById('music-btn');
+        const fileInput = document.getElementById('music-upload');
+
+        musicBtn.addEventListener('click', () => {
+            if (audio.src) {
+                // 如果已有音乐，则播放/暂停
+                if (audio.paused) {
+                    audio.play();
+                    musicBtn.innerText = "⏸ 暂停音乐";
+                } else {
+                    audio.pause();
+                    musicBtn.innerText = "▶ 继续播放";
+                }
+            } else {
+                // 如果还没上传，则触发文件选择
+                fileInput.click();
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                audio.src = URL.createObjectURL(file);
+                audio.loop = true; // 循环播放
+                audio.play();
+                musicBtn.innerText = "⏸ 暂停音乐";
+            }
+        });
     </script>
 
     <script>
