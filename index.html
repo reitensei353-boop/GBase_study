@@ -44,6 +44,13 @@
         const audio = new Audio();
         const listEl = document.getElementById('music-list');
 
+        // --- 自动播放逻辑 ---
+window.addEventListener('click', function() {
+    if (audio.paused) {
+        audio.play().catch(e => console.log("等待用户交互后播放"));
+    }
+}, { once: true }); // { once: true } 确保只在第一次点击时生效
+        
         // 渲染列表
         function renderList() {
             listEl.innerHTML = "";
