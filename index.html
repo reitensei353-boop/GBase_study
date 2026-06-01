@@ -8,72 +8,85 @@
         body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
         canvas { display: block; }
         
-        .content-box {
-            position: absolute;
-            top: 50px; left: 50px;
-            background: rgba(255, 255, 255, 0.7);
-            padding: 20px;
-            border-radius: 15px;
-            z-index: 10;
-        }
-
-        /* 音乐按钮样式：固定在右上角 */
-        #music-btn {
-            position: absolute;
-            top: 20px; right: 20px;
-            z-index: 20;
-            cursor: pointer;
-            background: rgba(255, 255, 255, 0.8);
-            border: none;
-            padding: 10px 15px;
-            border-radius: 50px;
-            font-size: 14px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
+        .content-box { position: absolute; top: 50px; left: 50px; background: rgba(255, 255, 255, 0.7); padding: 20px; border-radius: 15px; z-index: 10; }
+        
+        /* 播放器 UI */
+        #music-container { position: absolute; top: 20px; right: 20px; z-index: 20; text-align: right; }
+        #music-list { background: rgba(255, 255, 255, 0.9); padding: 10px; border-radius: 10px; margin-top: 5px; max-height: 200px; overflow-y: auto; display: none; width: 200px; }
+        .song-item { cursor: pointer; padding: 5px; border-bottom: 1px solid #ddd; font-size: 12px; }
+        .song-item:hover { color: #4a90e2; }
     </style>
 </head>
 <body>
 
-    <input type="file" id="music-upload" accept="audio/*" style="display:none">
-    
-    <button id="music-btn">🎵 开启音乐</button>
+    <div id="music-container">
+        <button onclick="document.getElementById('music-list').style.display='block'">🎵 音乐列表</button>
+        <button onclick="document.getElementById('music-upload').click()">+ 上传</button>
+        <input type="file" id="music-upload" accept="audio/*" multiple style="display:none">
+        
+        <div id="music-list">
+            <!-- 播放列表区域 -->
+        </div>
+    </div>
 
     <canvas id="canvas"></canvas>
-
     <div class="content-box">
         <h1>GBase网页嵌入</h1>
         <p>canvas</p>
     </div>
 
     <script>
-        // --- Canvas 逻辑 ---
+        // 1. 初始化播放列表 (填入你的默认音乐 URL)
+        let playlist = [
+            { name: "默认背景音乐", url: "https://example.com/your-music.mp3" }
+        ];
+        
+        const audio = new Audio();
+        const listEl = document.getElementById('music-list');
+
+        // 渲染列表
+        function renderList() {
+            listEl.innerHTML = "";
+            playlist.forEach((song, index) => {
+                const div = document.createElement('div');
+                div.className = 'song-item';
+                div.innerText = song.name;
+                div.onclick = () => { audio.src = song.url; audio.play(); };
+                listEl.appendChild(div);
+            });
+        }
+
+        // 上传处理
+        document.getElementById('music-upload').onchange = (e) => {
+            Array.from(e.target.files).forEach(file => {
+                playlist.push({ name: file.name, url: URL.createObjectURL(file) });
+            });
+            renderList();
+        };
+
+        renderList();
+
+        // --- Canvas 逻辑 (保持不变) ---
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
         img.src = 'https://raw.githubusercontent.com/reitensei353-boop/GBase_study/main/yj.png';
 
         const particles = Array.from({ length: 100 }, () => ({
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * window.innerHeight,
-            vx: (Math.random() - 0.5) * 0.5,
-            vy: (Math.random() - 0.5) * 0.5
+            x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight,
+            vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5
         }));
 
         function drawBackground() {
             const canvasAspect = canvas.width / canvas.height;
             const imgAspect = img.width / img.height;
             let drawWidth, drawHeight, offsetX, offsetY;
-
             if (canvasAspect > imgAspect) {
-                drawWidth = canvas.width;
-                drawHeight = canvas.width / imgAspect;
-                offsetX = 0;
-                offsetY = -(drawHeight - canvas.height) / 2;
+                drawWidth = canvas.width; drawHeight = canvas.width / imgAspect;
+                offsetX = 0; offsetY = -(drawHeight - canvas.height) / 2;
             } else {
-                drawWidth = canvas.height * imgAspect;
-                drawHeight = canvas.height;
-                offsetX = -(drawWidth - canvas.width) / 2;
-                offsetY = 0;
+                drawWidth = canvas.height * imgAspect; drawHeight = canvas.height;
+                offsetX = -(drawWidth - canvas.width) / 2; offsetY = 0;
             }
             ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
         }
@@ -86,51 +99,14 @@
                 p.x += p.vx; p.y += p.vy;
                 if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
                 if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); ctx.fill();
             });
             requestAnimationFrame(animate);
         }
 
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         img.onload = animate;
-
-        // --- 音乐播放逻辑 ---
-        const audio = new Audio();
-        const musicBtn = document.getElementById('music-btn');
-        const fileInput = document.getElementById('music-upload');
-
-        musicBtn.addEventListener('click', () => {
-            if (audio.src) {
-                // 如果已有音乐，则播放/暂停
-                if (audio.paused) {
-                    audio.play();
-                    musicBtn.innerText = "⏸ 暂停音乐";
-                } else {
-                    audio.pause();
-                    musicBtn.innerText = "▶ 继续播放";
-                }
-            } else {
-                // 如果还没上传，则触发文件选择
-                fileInput.click();
-            }
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                audio.src = URL.createObjectURL(file);
-                audio.loop = true; // 循环播放
-                audio.play();
-                musicBtn.innerText = "⏸ 暂停音乐";
-            }
-        });
     </script>
 
     <script>
