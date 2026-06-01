@@ -29,7 +29,7 @@
 
     <div id="music-panel" class="glass-card">
         <h3 style="margin-top:0">播放列表</h3>
-        <button onclick="togglePlay()" id="play-pause-btn">⏸ 暂停</button>
+        <button id="play-pause-btn" onclick="pauseAudio()">⏸ 暂停</button>
         <button onclick="document.getElementById('music-upload').click()">+ 上传</button>
         <input type="file" id="music-upload" accept="audio/*" multiple style="display:none">
         <div id="music-list"></div>
@@ -58,10 +58,12 @@
             panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
         }
 
-        function togglePlay() {
-            if (audio.paused) { audio.play(); document.getElementById('play-pause-btn').innerText = "⏸ 暂停"; }
-            else { audio.pause(); document.getElementById('play-pause-btn').innerText = "▶ 播放"; }
-        }
+        function pauseAudio() {
+    audio.pause();
+    const btn = document.getElementById('play-pause-btn');
+    btn.style.opacity = '0.5'; // 点击后按钮变半透明，表示已禁用或已触发
+    setTimeout(() => { btn.style.opacity = '1'; }, 200); // 瞬间闪烁一下表示点击成功
+}
 
         // 列表渲染与上传
         function renderList() {
