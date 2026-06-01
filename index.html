@@ -34,6 +34,40 @@
 </head>
 <body>
 
+    <canvas id="canvas"></canvas>
+<style>
+  body { margin: 0; overflow: hidden; background: #0b0e14; }
+  canvas { display: block; }
+</style>
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const particles = Array.from({ length: 100 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 0.5,
+    vy: (Math.random() - 0.5) * 0.5
+  }));
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#4a90e2';
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+</script>
+
     <!-- 用 class="content-box" 的盒子包住你的文字 -->
     <div class="content-box">
         <h1>Index</h1>
@@ -46,6 +80,7 @@
     apiBaseUrl: 'https://admin.gbase.ai/api',
   };
 </script>
+    
 <script
   src="https://gbase.ai/plugin/plugin.js"
   id="462e07e3-2eb4-4d32-81d0-6e616b272704"
