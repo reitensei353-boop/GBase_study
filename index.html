@@ -5,96 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GBase网页嵌入</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'PingFang SC', sans-serif; color: #fff; }
         canvas { display: block; }
-        
-        .content-box { position: absolute; top: 50px; left: 50px; background: rgba(255, 255, 255, 0.7); padding: 20px; border-radius: 15px; z-index: 10; }
-        
-        /* 播放器 UI */
-        #music-container { position: absolute; top: 20px; right: 20px; z-index: 20; text-align: right; }
-        #music-list { background: rgba(255, 255, 255, 0.9); padding: 10px; border-radius: 10px; margin-top: 5px; max-height: 200px; overflow-y: auto; display: none; width: 200px; }
-        .song-item { cursor: pointer; padding: 5px; border-bottom: 1px solid #ddd; font-size: 12px; }
-        .song-item:hover { color: #4a90e2; }
+
+        /* 统一的毛玻璃卡片样式 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+        }
+
+        /* 右侧格子容器 */
+        .grid-container {
+            position: absolute;
+            top: 150px; right: 50px;
+            display: grid;
+            grid-template-columns: repeat(3, 120px);
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .grid-item {
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s, background 0.3s;
+        }
+
+        .grid-item:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-5px);
+        }
+
+        /* 音乐控制区域位置调整 */
+        #music-container { position: absolute; top: 20px; right: 20px; z-index: 20; }
     </style>
 </head>
 <body>
 
     <div id="music-container">
-        <button id="toggle-list-btn" onclick="toggleList()">🎵 音乐列表</button>
-        <button id="play-pause-btn" onclick="togglePlay()">⏸ 暂停</button>
-        <button onclick="document.getElementById('music-upload').click()">+ 上传</button>
-        <input type="file" id="music-upload" accept="audio/*" multiple style="display:none">
-        
-        <div id="music-list"></div>
+        <button onclick="document.getElementById('music-list').style.display='block'">🎵 音乐</button>
+        <div id="music-list" style="display:none; background:#333; position:absolute; right:0; padding:10px;">
+            <div class="song-item" onclick="audio.src='https://raw.githubusercontent.com/reitensei353-boop/GBase_study/main/xzss.mp3'; audio.play();">星座书上</div>
+        </div>
+    </div>
+
+    <div class="grid-container">
+        <div class="glass-card grid-item" onclick="window.open('#')"><span>📖</span><span>博客</span></div>
+        <div class="glass-card grid-item" onclick="window.open('#')"><span>☁️</span><span>网盘</span></div>
+        <div class="glass-card grid-item" onclick="window.open('#')"><span>🎵</span><span>音乐</span></div>
+        <div class="glass-card grid-item" onclick="window.open('#')"><span>🚀</span><span>起始页</span></div>
+        <div class="glass-card grid-item" onclick="window.open('#')"><span>🔗</span><span>网址集</span></div>
+        <div class="glass-card grid-item" onclick="window.open('#')"><span>🔥</span><span>热榜</span></div>
     </div>
 
     <canvas id="canvas"></canvas>
-    <div class="content-box">
-        <h1>GBase网页嵌入</h1>
-        <p>canvas</p>
-    </div>
 
     <script>
-        let playlist = [
-            { name: "星座书上", url: "https://raw.githubusercontent.com/reitensei353-boop/GBase_study/main/xzss.mp3" }
-        ];
-        
-        const audio = new Audio(playlist[0].url);
-        audio.loop = true;
-        const listEl = document.getElementById('music-list');
-        const playPauseBtn = document.getElementById('play-pause-btn');
-
-        // --- 核心功能函数 ---
-        function toggleList() {
-            listEl.style.display = (listEl.style.display === 'block') ? 'none' : 'block';
-        }
-
-        function togglePlay() {
-            if (audio.paused) {
-                audio.play();
-                playPauseBtn.innerText = "⏸ 暂停";
-            } else {
-                audio.pause();
-                playPauseBtn.innerText = "▶ 播放";
-            }
-        }
-
-        // 点击空白处关闭列表
-        window.addEventListener('click', (e) => {
-            if (!document.getElementById('music-container').contains(e.target)) {
-                listEl.style.display = 'none';
-            }
-        });
-
-        // 第一次交互自动播放
-        window.addEventListener('click', function start() {
-            audio.play().then(() => {
-                window.removeEventListener('click', start);
-            }).catch(e => console.log("等待用户交互"));
-        }, { once: true });
-
-        // 渲染列表
-        function renderList() {
-            listEl.innerHTML = "";
-            playlist.forEach((song) => {
-                const div = document.createElement('div');
-                div.className = 'song-item';
-                div.innerText = song.name;
-                div.onclick = () => { audio.src = song.url; audio.play(); playPauseBtn.innerText = "⏸ 暂停"; };
-                listEl.appendChild(div);
-            });
-        }
-
-        document.getElementById('music-upload').onchange = (e) => {
-            Array.from(e.target.files).forEach(file => {
-                playlist.push({ name: file.name, url: URL.createObjectURL(file) });
-            });
-            renderList();
-        };
-
-        renderList();
-
-        // --- Canvas 逻辑 ---
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
@@ -122,7 +95,7 @@
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (img.complete) drawBackground();
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             particles.forEach(p => {
                 p.x += p.vx; p.y += p.vy;
                 if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
@@ -138,11 +111,7 @@
     </script>
 
     <script>
-        window.gptbaseConfig = {
-            chatbotId: '462e07e3-2eb4-4d32-81d0-6e616b272704',
-            baseUrl: 'https://admin.gbase.ai',
-            apiBaseUrl: 'https://admin.gbase.ai/api',
-        };
+        window.gptbaseConfig = { chatbotId: '462e07e3-2eb4-4d32-81d0-6e616b272704', baseUrl: 'https://admin.gbase.ai', apiBaseUrl: 'https://admin.gbase.ai/api' };
     </script>
     <script src="https://gbase.ai/plugin/plugin.js" id="462e07e3-2eb4-4d32-81d0-6e616b272704" defer></script>
 </body>
