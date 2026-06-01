@@ -20,13 +20,12 @@
 <body>
 
     <div id="music-container">
-        <button onclick="document.getElementById('music-list').style.display='block'">🎵 音乐列表</button>
+        <button id="toggle-list-btn" onclick="toggleList()">🎵 音乐列表</button>
+        <button id="play-pause-btn" onclick="togglePlay()">⏸ 暂停</button>
         <button onclick="document.getElementById('music-upload').click()">+ 上传</button>
         <input type="file" id="music-upload" accept="audio/*" multiple style="display:none">
         
-        <div id="music-list">
-            <!-- 播放列表区域 -->
-        </div>
+        <div id="music-list"></div>
     </div>
 
     <canvas id="canvas"></canvas>
@@ -36,34 +35,56 @@
     </div>
 
     <script>
-        // 1. 初始化播放列表 (填入你的默认音乐 URL)
         let playlist = [
             { name: "星座书上", url: "https://raw.githubusercontent.com/reitensei353-boop/GBase_study/main/xzss.mp3" }
         ];
         
-        const audio = new Audio();
+        const audio = new Audio(playlist[0].url);
+        audio.loop = true;
         const listEl = document.getElementById('music-list');
+        const playPauseBtn = document.getElementById('play-pause-btn');
 
-        // --- 自动播放逻辑 ---
-window.addEventListener('click', function() {
-    if (audio.paused) {
-        audio.play().catch(e => console.log("等待用户交互后播放"));
-    }
-}, { once: true }); // { once: true } 确保只在第一次点击时生效
-        
+        // --- 核心功能函数 ---
+        function toggleList() {
+            listEl.style.display = (listEl.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function togglePlay() {
+            if (audio.paused) {
+                audio.play();
+                playPauseBtn.innerText = "⏸ 暂停";
+            } else {
+                audio.pause();
+                playPauseBtn.innerText = "▶ 播放";
+            }
+        }
+
+        // 点击空白处关闭列表
+        window.addEventListener('click', (e) => {
+            if (!document.getElementById('music-container').contains(e.target)) {
+                listEl.style.display = 'none';
+            }
+        });
+
+        // 第一次交互自动播放
+        window.addEventListener('click', function start() {
+            audio.play().then(() => {
+                window.removeEventListener('click', start);
+            }).catch(e => console.log("等待用户交互"));
+        }, { once: true });
+
         // 渲染列表
         function renderList() {
             listEl.innerHTML = "";
-            playlist.forEach((song, index) => {
+            playlist.forEach((song) => {
                 const div = document.createElement('div');
                 div.className = 'song-item';
                 div.innerText = song.name;
-                div.onclick = () => { audio.src = song.url; audio.play(); };
+                div.onclick = () => { audio.src = song.url; audio.play(); playPauseBtn.innerText = "⏸ 暂停"; };
                 listEl.appendChild(div);
             });
         }
 
-        // 上传处理
         document.getElementById('music-upload').onchange = (e) => {
             Array.from(e.target.files).forEach(file => {
                 playlist.push({ name: file.name, url: URL.createObjectURL(file) });
@@ -73,7 +94,7 @@ window.addEventListener('click', function() {
 
         renderList();
 
-        // --- Canvas 逻辑 (保持不变) ---
+        // --- Canvas 逻辑 ---
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
