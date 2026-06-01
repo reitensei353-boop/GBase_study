@@ -3,42 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GBase网页嵌入</title>
+    <title>GBase 网页嵌入 (修正透明度)</title>
     <style>
-        /* 页面整体样式：确保背景图充满全屏 */
+        /* 1. 设置整个页面的背景图，并确保 body 没有背景颜色遮挡 */
         body {
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
             text-align: center;
+            overflow: hidden; /* 防止 Canvas 的 resize 引起滚动条 */
+
+            /* 添加背景图的代码 */
             background-image: url('https://raw.githubusercontent.com/reitensei353-boop/GBase_study/main/yj.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            background-color: #000; /* 作为图片的备选底色 */
+            background-size: cover;          /* 图片覆盖整个页面 */
+            background-position: center;     /* 图片居中 */
+            background-repeat: no-repeat;    /* 防止图片平铺重复 */
+            background-attachment: fixed;    /* 背景固定 */
+            background-color: #0b0e14;       /* 即使图片加载失败，也设一个背景色，防止刺眼 */
         }
 
-        /* Canvas 层：透明背景，只显示粒子 */
+        /* 2. 关键：将 Canvas 设置为完全透明且不响应鼠标 */
         #canvas {
-            position: fixed;
+            display: block;                  /* 移除额外的边距 */
+            position: fixed;                 /* 固定位置 */
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
-            pointer-events: none; /* 确保鼠标可以点到页面内容 */
+            z-index: -1;                     /* 沉底，放在所有内容后面，但在背景图前面 */
+            pointer-events: none;            /* 让鼠标事件穿透 Canvas，可以点击下面的内容 */
+            background-color: transparent;    /* 强制 Canvas 本身透明 */
         }
 
+        /* 3. 创建一个半透明的白色卡片容器，并确保它浮在 Canvas 之上 */
         .content-box {
-            background-color: rgba(255, 255, 255, 0.7);
+            position: relative;              /* 相对定位 */
+            z-index: 10;                     /* 高层级，浮在 Canvas 之上 */
+            background-color: rgba(255, 255, 255, 0.7); /* 0.7代表70%的不透明度 */
             padding: 20px;
-            border-radius: 15px;
+            border-radius: 15px;             /* 圆角 */
             display: inline-block;
-            margin-top: 50px;
+            margin-top: 100px;               /* 向下移动一些，防止和 Canvas resize 冲突 */
         }
 
-        h1 { color: #333; margin: 0; }
+        h1 {
+            color: #333;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -53,13 +64,13 @@
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        
+
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
         window.addEventListener('resize', resize);
-        resize();
+        resize(); // 初始化尺寸
 
         const particles = Array.from({ length: 100 }, () => ({
             x: Math.random() * canvas.width,
@@ -69,18 +80,14 @@
         }));
 
         function draw() {
-            // 清除每一帧，且不添加任何填充颜色，保持 Canvas 全透明
+            // 关键：清空 Canvas 必须用 clearRect，它会清除上一次的绘制并恢复透明度。
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // 使用半透明白色，使粒子在复杂背景上也能看清
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'; 
-            
+
+            ctx.fillStyle = '#4a90e2'; // 粒子颜色保持原样
             particles.forEach(p => {
-                p.x += p.vx; 
-                p.y += p.vy;
+                p.x += p.vx; p.y += p.vy;
                 if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
                 if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-                
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
                 ctx.fill();
@@ -97,6 +104,10 @@
             apiBaseUrl: 'https://admin.gbase.ai/api',
         };
     </script>
-    <script src="https://gbase.ai/plugin/plugin.js" id="462e07e3-2eb4-4d32-81d0-6e616b272704" defer></script>
+    <script
+        src="https://gbase.ai/plugin/plugin.js"
+        id="462e07e3-2eb4-4d32-81d0-6e616b272704"
+        defer>
+    </script>
 </body>
 </html>
