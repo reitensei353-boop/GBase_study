@@ -2,25 +2,31 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>背景图嵌入Canvas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBase网页嵌入</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; }
         canvas { display: block; }
+        
         .content-box {
-            position: absolute; /* 使用绝对定位脱离文档流 */
+            position: absolute;
             top: 50px; left: 50px;
             background: rgba(255, 255, 255, 0.7);
             padding: 20px;
             border-radius: 15px;
+            z-index: 10; /* 确保盒子在canvas之上 */
         }
+        h1 { margin: 0; color: #333; }
+        p { margin: 5px 0 0 0; color: #555; }
     </style>
 </head>
 <body>
 
     <canvas id="canvas"></canvas>
+
     <div class="content-box">
-        <h1>Index</h1>
-        <p>背景图已嵌入 Canvas 内部</p>
+        <h1>GBase网页嵌入</h1>
+        <p>canvas</p>
     </div>
 
     <script>
@@ -29,7 +35,6 @@
         const img = new Image();
         img.src = 'https://raw.githubusercontent.com/reitensei353-boop/GBase_study/main/yj.png';
 
-        // 粒子数据
         const particles = Array.from({ length: 100 }, () => ({
             x: Math.random() * window.innerWidth,
             y: Math.random() * window.innerHeight,
@@ -37,24 +42,36 @@
             vy: (Math.random() - 0.5) * 0.5
         }));
 
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
+        function drawBackground() {
+            const canvasAspect = canvas.width / canvas.height;
+            const imgAspect = img.width / img.height;
+            
+            let drawWidth, drawHeight, offsetX, offsetY;
 
-        function draw() {
-            // 1. 先绘制背景图 (这会覆盖掉上一帧)
-            if (img.complete) {
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            // 计算等比例缩放 (Cover 逻辑)
+            if (canvasAspect > imgAspect) {
+                drawWidth = canvas.width;
+                drawHeight = canvas.width / imgAspect;
+                offsetX = 0;
+                offsetY = -(drawHeight - canvas.height) / 2;
             } else {
-                ctx.fillStyle = '#000'; // 图片加载前显示黑色
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                drawWidth = canvas.height * imgAspect;
+                drawHeight = canvas.height;
+                offsetX = -(drawWidth - canvas.width) / 2;
+                offsetY = 0;
+            }
+            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (img.complete) {
+                drawBackground();
             }
 
-            // 2. 绘制粒子
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            // 绘制粒子
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
             particles.forEach(p => {
                 p.x += p.vx; p.y += p.vy;
                 if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
@@ -63,9 +80,26 @@
                 ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
                 ctx.fill();
             });
-            requestAnimationFrame(draw);
+            requestAnimationFrame(animate);
         }
-        img.onload = draw; // 图片加载完成后开始动画
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        img.onload = animate; // 等图片加载好后再开始
     </script>
+
+    <script>
+        window.gptbaseConfig = {
+            chatbotId: '462e07e3-2eb4-4d32-81d0-6e616b272704',
+            baseUrl: 'https://admin.gbase.ai',
+            apiBaseUrl: 'https://admin.gbase.ai/api',
+        };
+    </script>
+    <script src="https://gbase.ai/plugin/plugin.js" id="462e07e3-2eb4-4d32-81d0-6e616b272704" defer></script>
 </body>
 </html>
