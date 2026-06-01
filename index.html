@@ -8,19 +8,22 @@
         body { margin: 0; overflow: hidden; background: #000; font-family: 'PingFang SC', sans-serif; color: #fff; }
         canvas { display: block; }
 
-        /* 通用毛玻璃效果 */
         .glass-card { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 15px; padding: 20px; color: white; }
 
-        /* 右侧功能格子布局 */
-        .grid-container { position: absolute; top: 150px; right: 50px; display: grid; grid-template-columns: repeat(3, 120px); gap: 15px; z-index: 10; }
+        /* 响应式布局：手机适配 */
+        .grid-container { 
+            position: absolute; top: 150px; right: 50px; display: grid; 
+            grid-template-columns: repeat(3, 120px); gap: 15px; z-index: 10; 
+        }
+        @media (max-width: 768px) {
+            .grid-container { right: auto; left: 50%; transform: translateX(-50%); grid-template-columns: repeat(2, 120px); top: 100px; }
+            .panel { left: 5% !important; width: 90% !important; top: 250px !important; }
+        }
+
         .grid-item { height: 100px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; }
         .grid-item:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-5px); }
 
-        /* 左侧通用面板 */
-        .panel { 
-            position: absolute; top: 150px; left: 50px; width: 250px; height: 350px; 
-            z-index: 20; display: none; overflow-y: auto;
-        }
+        .panel { position: absolute; top: 150px; left: 50px; width: 250px; height: 350px; z-index: 20; display: none; overflow-y: auto; }
         .item { cursor: pointer; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 14px; }
         .item:hover { color: #4a90e2; background: rgba(255,255,255,0.1); }
     </style>
@@ -56,12 +59,10 @@
     <canvas id="canvas"></canvas>
 
     <script>
-        // 音乐初始化
         let playlist = [{ name: "星座书上", url: "https://raw.githubusercontent.com/reitensei353-boop/GBase_study/main/xzss.mp3" }];
         const audio = new Audio(playlist[0].url);
         audio.loop = true;
 
-        // 面板切换逻辑（互斥）
         function togglePanel(panelId) {
             const panels = ['music-panel', 'links-panel'];
             panels.forEach(id => {
@@ -70,13 +71,11 @@
             });
         }
 
-        // 播放切换
         function togglePlay() {
             if (audio.paused) { audio.play(); document.getElementById('play-pause-btn').innerText = "⏸ 暂停"; }
             else { audio.pause(); document.getElementById('play-pause-btn').innerText = "▶ 播放"; }
         }
 
-        // 渲染列表
         function renderList() {
             const listEl = document.getElementById('music-list');
             listEl.innerHTML = "";
@@ -94,16 +93,13 @@
         };
         renderList();
 
-        // 自动播放修复
         window.addEventListener('click', function start() { audio.play().then(() => window.removeEventListener('click', start)).catch(e => {}); }, { once: true });
 
-        // Canvas 逻辑
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
         img.src = 'https://raw.githubusercontent.com/reitensei353-boop/GBase_study/main/yj.png';
-        const particles = Array.from({ length: 100 }, () => ({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5 }));
-
+        
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (img.complete) {
@@ -113,22 +109,11 @@
                 const h = aspect > imgAspect ? canvas.width / imgAspect : canvas.height;
                 ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
             }
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            particles.forEach(p => {
-                p.x += p.vx; p.y += p.vy;
-                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-                ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); ctx.fill();
-            });
             requestAnimationFrame(animate);
         }
         window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         img.onload = animate;
-    </script>
-
-    <script>
-        window.gptbaseConfig = { chatbotId: '462e07e3-2eb4-4d32-81d0-6e616b272704', baseUrl: 'https://admin.gbase.ai', apiBaseUrl: 'https://admin.gbase.ai/api' };
     </script>
     <script src="https://gbase.ai/plugin/plugin.js" id="462e07e3-2eb4-4d32-81d0-6e616b272704" defer></script>
 </body>
