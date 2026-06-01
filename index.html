@@ -16,31 +16,38 @@
         .grid-item { height: 100px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; }
         .grid-item:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-5px); }
 
-        /* 左侧音乐列表面板 */
-        #music-panel { 
+        /* 左侧通用面板 */
+        .panel { 
             position: absolute; top: 150px; left: 50px; width: 250px; height: 350px; 
             z-index: 20; display: none; overflow-y: auto;
         }
-        .song-item { cursor: pointer; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 14px; }
-        .song-item:hover { color: #4a90e2; }
+        .item { cursor: pointer; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 14px; }
+        .item:hover { color: #4a90e2; background: rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
-    <div id="music-panel" class="glass-card">
+    <div id="music-panel" class="panel glass-card">
         <h3 style="margin-top:0">播放列表</h3>
-        <button onclick="togglePlay()" id="play-pause-btn">⏸ 暂停</button>
+        <button id="play-pause-btn" onclick="togglePlay()">⏸ 暂停</button>
         <button onclick="document.getElementById('music-upload').click()">+ 上传</button>
         <input type="file" id="music-upload" accept="audio/*" multiple style="display:none">
         <div id="music-list"></div>
     </div>
 
+    <div id="links-panel" class="panel glass-card">
+        <h3 style="margin-top:0">网址导航</h3>
+        <div class="item" onclick="window.open('https://www.google.com', '_blank')">🌐 Google</div>
+        <div class="item" onclick="window.open('https://github.com', '_blank')">🐙 GitHub</div>
+        <div class="item" onclick="window.open('https://www.bilibili.com', '_blank')">📺 Bilibili</div>
+    </div>
+
     <div class="grid-container">
         <div class="glass-card grid-item"><span>📖</span><span>博客</span></div>
         <div class="glass-card grid-item"><span>☁️</span><span>网盘</span></div>
-        <div class="glass-card grid-item" onclick="toggleMusicPanel()"><span>🎵</span><span>音乐</span></div>
+        <div class="glass-card grid-item" onclick="togglePanel('music-panel')"><span>🎵</span><span>音乐</span></div>
         <div class="glass-card grid-item"><span>🚀</span><span>起始页</span></div>
-        <div class="glass-card grid-item"><span>🔗</span><span>网址集</span></div>
+        <div class="glass-card grid-item" onclick="togglePanel('links-panel')"><span>🔗</span><span>网址集</span></div>
         <div class="glass-card grid-item"><span>🔥</span><span>热榜</span></div>
     </div>
 
@@ -52,26 +59,30 @@
         const audio = new Audio(playlist[0].url);
         audio.loop = true;
 
-        // 音乐面板显示切换
-        function toggleMusicPanel() {
-            const panel = document.getElementById('music-panel');
-            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        // 面板切换逻辑（互斥）
+        function togglePanel(panelId) {
+            const panels = ['music-panel', 'links-panel'];
+            panels.forEach(id => {
+                const p = document.getElementById(id);
+                p.style.display = (id === panelId && p.style.display !== 'block') ? 'block' : 'none';
+            });
         }
 
+        // 播放切换
         function togglePlay() {
             if (audio.paused) { audio.play(); document.getElementById('play-pause-btn').innerText = "⏸ 暂停"; }
             else { audio.pause(); document.getElementById('play-pause-btn').innerText = "▶ 播放"; }
         }
 
-        // 列表渲染与上传
+        // 渲染列表
         function renderList() {
             const listEl = document.getElementById('music-list');
             listEl.innerHTML = "";
             playlist.forEach(song => {
                 const div = document.createElement('div');
-                div.className = 'song-item';
+                div.className = 'item';
                 div.innerText = song.name;
-                div.onclick = () => { audio.src = song.url; audio.play(); };
+                div.onclick = () => { audio.src = song.url; audio.play(); document.getElementById('play-pause-btn').innerText = "⏸ 暂停"; };
                 listEl.appendChild(div);
             });
         }
@@ -84,7 +95,7 @@
         // 自动播放修复
         window.addEventListener('click', function start() { audio.play().then(() => window.removeEventListener('click', start)).catch(e => {}); }, { once: true });
 
-        // Canvas 背景逻辑
+        // Canvas 逻辑
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
