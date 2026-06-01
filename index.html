@@ -5,86 +5,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GBase网页嵌入</title>
     <style>
-    body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        margin-top: 50px;
-        
-        /* 添加背景图的关键代码 */
-        background-image: url('https://raw.githubusercontent.com/reitensei353-boop/GBase_study/main/yj.png');/* 图片URL */
-        background-size: cover;          /* 让图片覆盖整个页面 */
-        background-position: center;     /* 让图片居中 */
-        background-repeat: no-repeat;    /* 防止图片平铺重复 */
-        background-attachment: fixed;    /* 背景固定，滚动页面时背景不动 */
-    }
-    /* 创建一个半透明的白色卡片容器 */
-    .content-box {
-        background-color: rgba(255, 255, 255, 0.7); /* 0.7代表70%的不透明度，可以根据喜好调整 */
-        padding: 20px;
-        border-radius: 15px; /* 让边角变圆润 */
-        display: inline-block; /* 让盒子宽度适应内容 */
-        margin-top: 20px;
-    }
+        /* 1. 设置整个页面的背景图 */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-image: url('https://raw.githubusercontent.com/reitensei353-boop/GBase_study/main/yj.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
 
-    h1 {
-        color: #333;
-        margin: 0; /* 清除默认间距 */
-    }
-</style>
+        /* 2. 强制 Canvas 固定在背景上，且不遮挡文字，不响应鼠标 */
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; 
+            pointer-events: none; /* 关键：让鼠标点击穿透 */
+        }
+
+        .content-box {
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 20px;
+            border-radius: 15px;
+            display: inline-block;
+            margin-top: 50px;
+        }
+    </style>
 </head>
 <body>
 
     <canvas id="canvas"></canvas>
-<style>
-  body { margin: 0; overflow: hidden; background: #0b0e14; }
-  canvas { display: block; }
-</style>
-<script>
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
 
-  const particles = Array.from({ length: 100 }, () => ({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    vx: (Math.random() - 0.5) * 0.5,
-    vy: (Math.random() - 0.5) * 0.5
-  }));
-
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#4a90e2';
-    particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-      ctx.fill();
-    });
-    requestAnimationFrame(draw);
-  }
-  draw();
-</script>
-
-    <!-- 用 class="content-box" 的盒子包住你的文字 -->
     <div class="content-box">
         <h1>Index</h1>
         <p>GBase_study</p>
     </div>
-<script>
-  window.gptbaseConfig = {
-    chatbotId: '462e07e3-2eb4-4d32-81d0-6e616b272704',
-    baseUrl: 'https://admin.gbase.ai',
-    apiBaseUrl: 'https://admin.gbase.ai/api',
-  };
-</script>
-    
-<script
-  src="https://gbase.ai/plugin/plugin.js"
-  id="462e07e3-2eb4-4d32-81d0-6e616b272704"
-  defer>
-</script>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = Array.from({ length: 100 }, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5
+        }));
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#4a90e2';
+            particles.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        draw();
+    </script>
+
+    <script>
+        window.gptbaseConfig = {
+            chatbotId: '462e07e3-2eb4-4d32-81d0-6e616b272704',
+            baseUrl: 'https://admin.gbase.ai',
+            apiBaseUrl: 'https://admin.gbase.ai/api',
+        };
+    </script>
+    <script src="https://gbase.ai/plugin/plugin.js" id="462e07e3-2eb4-4d32-81d0-6e616b272704" defer></script>
 </body>
 </html>
