@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GBase网页嵌入</title>
     <style>
-        /* 1. 设置整个页面的背景图 */
+        /* 页面整体样式：确保背景图充满全屏 */
         body {
             margin: 0;
             padding: 0;
@@ -16,17 +16,18 @@
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
+            background-color: #000; /* 作为图片的备选底色 */
         }
 
-        /* 2. 强制 Canvas 固定在背景上，且不遮挡文字，不响应鼠标 */
+        /* Canvas 层：透明背景，只显示粒子 */
         #canvas {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1; 
-            pointer-events: none; /* 关键：让鼠标点击穿透 */
+            z-index: -1;
+            pointer-events: none; /* 确保鼠标可以点到页面内容 */
         }
 
         .content-box {
@@ -36,6 +37,8 @@
             display: inline-block;
             margin-top: 50px;
         }
+
+        h1 { color: #333; margin: 0; }
     </style>
 </head>
 <body>
@@ -50,8 +53,13 @@
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
         const particles = Array.from({ length: 100 }, () => ({
             x: Math.random() * canvas.width,
@@ -61,12 +69,18 @@
         }));
 
         function draw() {
+            // 清除每一帧，且不添加任何填充颜色，保持 Canvas 全透明
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#4a90e2';
+            
+            // 使用半透明白色，使粒子在复杂背景上也能看清
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'; 
+            
             particles.forEach(p => {
-                p.x += p.vx; p.y += p.vy;
+                p.x += p.vx; 
+                p.y += p.vy;
                 if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
                 if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
                 ctx.fill();
