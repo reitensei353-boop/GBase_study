@@ -10,10 +10,9 @@
 
         .glass-card { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 15px; padding: 20px; color: white; }
 
-        /* 响应式布局：手机适配 */
-        .grid-container { 
-            position: absolute; top: 150px; right: 50px; display: grid; 
-            grid-template-columns: repeat(3, 120px); gap: 15px; z-index: 10; 
+        .grid-container {
+            position: absolute; top: 150px; right: 50px; display: grid;
+            grid-template-columns: repeat(3, 120px); gap: 15px; z-index: 10;
         }
         @media (max-width: 768px) {
             .grid-container { right: auto; left: 50%; transform: translateX(-50%); grid-template-columns: repeat(2, 120px); top: 100px; }
@@ -22,47 +21,61 @@
 
         .grid-item { height: 100px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; }
         .grid-item:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-5px); }
+        .grid-item.disabled { cursor: not-allowed; opacity: 0.5; }
+        .grid-item.disabled:hover { background: rgba(255, 255, 255, 0.15); transform: none; }
 
         .panel { position: absolute; top: 150px; left: 50px; width: 250px; height: 350px; z-index: 20; display: none; overflow-y: auto; }
         .item { cursor: pointer; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 14px; }
         .item:hover { color: #4a90e2; background: rgba(255,255,255,0.1); }
+        .item.active { color: #4a90e2; font-weight: bold; }
+
+        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; opacity: 0.6; z-index: 5; }
     </style>
 </head>
 <body>
 
+    <div id="loading">加载中...</div>
+
     <div id="music-panel" class="panel glass-card">
         <h3 style="margin-top:0">播放列表</h3>
-        <button id="play-pause-btn" onclick="togglePlay()">⏸ 暂停</button>
-        <button onclick="document.getElementById('music-upload').click()">+ 上传</button>
+        <button id="play-pause-btn">⏸ 暂停</button>
+        <button id="upload-btn">+ 上传</button>
         <input type="file" id="music-upload" accept="audio/*" multiple style="display:none">
         <div id="music-list"></div>
     </div>
 
     <div id="links-panel" class="panel glass-card">
         <h3 style="margin-top:0">网址导航</h3>
-        <div class="item" onclick="window.open('https://gbase.ai/', '_blank')">🤖 GBase</div>
-        <div class="item" onclick="window.open('https://www.google.com', '_blank')">🌐 Google</div>
-        <div class="item" onclick="window.open('https://github.com', '_blank')">🐱 GitHub</div>
-        <div class="item" onclick="window.open('https://www.bilibili.com', '_blank')">📺 Bilibili</div>
-        <div class="item" onclick="window.open('https://gbase.ai/widget-page/462e07e3-2eb4-4d32-81d0-6e616b272704', '_blank')">🤖 GBase-哈基米</div>    
+        <div id="links-list"></div>
     </div>
 
     <div class="grid-container">
-        <div class="glass-card grid-item"><span>📖</span><span>博客</span></div>
-        <div class="glass-card grid-item"><span>☁️</span><span>网盘</span></div>
-        <div class="glass-card grid-item" onclick="togglePanel('music-panel')"><span>🎵</span><span>音乐</span></div>
-        <div class="glass-card grid-item"><span>🚀</span><span>起始页</span></div>
-        <div class="glass-card grid-item" onclick="togglePanel('links-panel')"><span>🔗</span><span>网址集</span></div>
-        <div class="glass-card grid-item"><span>🔥</span><span>热榜</span></div>
+        <div class="glass-card grid-item disabled" title="即将上线"><span>📖</span><span>博客</span></div>
+        <div class="glass-card grid-item disabled" title="即将上线"><span>☁️</span><span>网盘</span></div>
+        <div class="glass-card grid-item" id="btn-music"><span>🎵</span><span>音乐</span></div>
+        <div class="glass-card grid-item disabled" title="即将上线"><span>🚀</span><span>起始页</span></div>
+        <div class="glass-card grid-item" id="btn-links"><span>🔗</span><span>网址集</span></div>
+        <div class="glass-card grid-item disabled" title="即将上线"><span>🔥</span><span>热榜</span></div>
     </div>
 
     <canvas id="canvas"></canvas>
 
     <script>
+        // ---- 数据配置 ----
+        const LINKS = [
+            { icon: '🤖', name: 'GBase',       url: 'https://gbase.ai/' },
+            { icon: '🌐', name: 'Google',       url: 'https://www.google.com' },
+            { icon: '🐱', name: 'GitHub',       url: 'https://github.com' },
+            { icon: '📺', name: 'Bilibili',     url: 'https://www.bilibili.com' },
+            { icon: '🤖', name: 'GBase-哈基米', url: 'https://gbase.ai/widget-page/462e07e3-2eb4-4d32-81d0-6e616b272704' },
+        ];
+
         let playlist = [{ name: "星座书上", url: "https://raw.githubusercontent.com/reitensei353-boop/GBase_study/main/xzss.mp3" }];
+        let currentIndex = 0;
         const audio = new Audio(playlist[0].url);
         audio.loop = true;
 
+        // ---- 面板切换 ----
         function togglePanel(panelId) {
             const panels = ['music-panel', 'links-panel'];
             panels.forEach(id => {
@@ -71,49 +84,103 @@
             });
         }
 
+        document.getElementById('btn-music').addEventListener('click', () => togglePanel('music-panel'));
+        document.getElementById('btn-links').addEventListener('click', () => togglePanel('links-panel'));
+
+        // 点击空白区域关闭所有面板
+        document.addEventListener('click', (e) => {
+            const panels = document.querySelectorAll('.panel');
+            const triggers = document.querySelectorAll('.grid-item:not(.disabled)');
+            const clickedInside = [...panels, ...triggers].some(el => el.contains(e.target));
+            if (!clickedInside) panels.forEach(p => p.style.display = 'none');
+        });
+
+        // ---- 音乐播放器 ----
+        function playTrack(index) {
+            currentIndex = index;
+            audio.src = playlist[index].url;
+            audio.play();
+            document.getElementById('play-pause-btn').innerText = "⏸ 暂停";
+            renderList();
+        }
+
         function togglePlay() {
-            if (audio.paused) { audio.play(); document.getElementById('play-pause-btn').innerText = "⏸ 暂停"; }
-            else { audio.pause(); document.getElementById('play-pause-btn').innerText = "▶ 播放"; }
+            if (audio.paused) {
+                audio.play();
+                document.getElementById('play-pause-btn').innerText = "⏸ 暂停";
+            } else {
+                audio.pause();
+                document.getElementById('play-pause-btn').innerText = "▶ 播放";
+            }
         }
 
         function renderList() {
             const listEl = document.getElementById('music-list');
             listEl.innerHTML = "";
-            playlist.forEach(song => {
+            playlist.forEach((song, i) => {
                 const div = document.createElement('div');
-                div.className = 'item';
+                div.className = 'item' + (i === currentIndex ? ' active' : '');
                 div.innerText = song.name;
-                div.onclick = () => { audio.src = song.url; audio.play(); document.getElementById('play-pause-btn').innerText = "⏸ 暂停"; };
+                div.addEventListener('click', () => playTrack(i));
                 listEl.appendChild(div);
             });
         }
-        document.getElementById('music-upload').onchange = (e) => {
+
+        document.getElementById('play-pause-btn').addEventListener('click', togglePlay);
+        document.getElementById('upload-btn').addEventListener('click', () => document.getElementById('music-upload').click());
+        document.getElementById('music-upload').addEventListener('change', (e) => {
             Array.from(e.target.files).forEach(file => playlist.push({ name: file.name, url: URL.createObjectURL(file) }));
             renderList();
-        };
+        });
         renderList();
 
-        window.addEventListener('click', function start() { audio.play().then(() => window.removeEventListener('click', start)).catch(e => {}); }, { once: true });
+        // 首次点击页面触发自动播放（规避浏览器限制）
+        window.addEventListener('click', function start() {
+            audio.play().then(() => window.removeEventListener('click', start)).catch(() => {});
+        }, { once: true });
 
+        // ---- 链接列表 ----
+        const linksEl = document.getElementById('links-list');
+        LINKS.forEach(({ icon, name, url }) => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerText = `${icon} ${name}`;
+            div.addEventListener('click', () => window.open(url, '_blank', 'noopener,noreferrer'));
+            linksEl.appendChild(div);
+        });
+
+        // ---- Canvas 背景（静态绘制，resize 时重绘，不循环）----
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
         img.src = 'https://raw.githubusercontent.com/reitensei353-boop/GBase_study/main/yj.png';
-        
-        function animate() {
+
+        function drawBackground() {
+            if (!img.complete || img.naturalWidth === 0) return;
+            const aspect = canvas.width / canvas.height;
+            const imgAspect = img.width / img.height;
+            const w = aspect > imgAspect ? canvas.width : canvas.height * imgAspect;
+            const h = aspect > imgAspect ? canvas.width / imgAspect : canvas.height;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (img.complete) {
-                const aspect = canvas.width / canvas.height;
-                const imgAspect = img.width / img.height;
-                const w = aspect > imgAspect ? canvas.width : canvas.height * imgAspect;
-                const h = aspect > imgAspect ? canvas.width / imgAspect : canvas.height;
-                ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
-            }
-            requestAnimationFrame(animate);
+            ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
         }
-        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        img.onload = animate;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            drawBackground();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        img.onload = () => {
+            document.getElementById('loading').style.display = 'none';
+            drawBackground();
+        };
+        img.onerror = () => {
+            document.getElementById('loading').innerText = '背景加载失败';
+        };
     </script>
     <script src="https://gbase.ai/plugin/plugin.js" id="462e07e3-2eb4-4d32-81d0-6e616b272704" defer></script>
 </body>
